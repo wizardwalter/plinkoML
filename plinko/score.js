@@ -33,7 +33,7 @@ function runAnalysis() {
       .divide(testSetSize)
       .value();
 
-    console.log('For k of ', k , 'Accuracy is ', accuracy)
+    console.log('For k of ', k , 'Accuracy is', accuracy)
 
   });
 }
