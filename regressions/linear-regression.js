@@ -19,6 +19,8 @@ class LinearRegression {
             .transpose()
             .matMul(differences)
             .div(this.features.shape[0])
+
+        this.weights = this.weights.sub(slopes.mul(this.options.learningRate))
     }
 
     // gradientDescent() {
@@ -43,6 +45,17 @@ class LinearRegression {
             this.gradientDescent()
 
         }
+    }
+
+    test (testFeatures, testLabels) {
+        testFeatures = tf.tensor(testFeatures)
+        testLabels = tf.tensor(testLabels)
+
+        testFeatures = tf.ones([testFeatures.shape[0], 1]).concat(testFeatures, 1)
+
+        const predictions = testFeatures.matMul(this.weights)
+
+        predictions.print()
     }
 }
 
