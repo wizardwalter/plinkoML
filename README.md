@@ -1,3 +1,5 @@
+# This is from a course on UDEMY, please read below.
+
 # ML Kits
 
 Starter projects for learning about Machine Learning.
