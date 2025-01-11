@@ -7,7 +7,7 @@ class LinearRegression {
         this.labels = tf.tensor(labels)
         this.options = Object.assign({ learningRate: 0.1, iterations: 1000 }, options)
         this.mseHistory = []
-       
+
 
         this.weights = tf.zeros([this.features.shape[1], 1])
     }
@@ -20,6 +20,18 @@ class LinearRegression {
             .transpose()
             .matMul(differences)
             .div(this.features.shape[0])
+
+        this.weights = this.weights.sub(slopes.mul(this.options.learningRate))
+    }
+
+    batchGradientDescent(features, labels) {
+        const currentGuesses = features.matMul(this.weights)
+        const differences = currentGuesses.sub(labels)
+
+        const slopes = features
+            .transpose()
+            .matMul(differences)
+            .div(features.shape[0])
 
         this.weights = this.weights.sub(slopes.mul(this.options.learningRate))
     }
@@ -42,11 +54,35 @@ class LinearRegression {
     // }
 
     train() {
-        for (let i = 0; i < this.options.iterations; i++) {
-            this.gradientDescent()
-            this.recordMSE()
-            this.updateLearningRate()
+        if (this.options.batchSize) {
+            console.log('here in batch')
+            const batchQuantity = Math.floor(this.features.shape[0] / this.options.batchSize)
+
+            for (let i = 0; i < this.options.iterations; i++) {
+                for (let j = 0; j < batchQuantity; j++) {
+                    const { batchSize } = this.options
+                    const startIndex = j * batchSize
+
+                    const featureSlice = this.features.slice([startIndex, 0], [batchSize, -1])
+                    const labelSlice = this.labels.slice([startIndex, 0], [batchSize, -1])
+
+                    this.batchGradientDescent(featureSlice, labelSlice)
+                    this.recordMSE()
+                    this.updateLearningRate()
+
+                }
+            }
+        } else {
+            for (let i = 0; i < this.options.iterations; i++) {
+                this.gradientDescent()
+                this.recordMSE()
+                this.updateLearningRate()
+            }
         }
+    }
+
+    predict(observations) {
+
     }
 
     test(testFeatures, testLabels) {
@@ -64,9 +100,9 @@ class LinearRegression {
 
     processFeatures(features) {
         features = tf.tensor(features)
-        if(this.mean && this.variance){
-           features = features.sub(this.mean).div(this.variance.pow(0.5))
-        }else{
+        if (this.mean && this.variance) {
+            features = features.sub(this.mean).div(this.variance.pow(0.5))
+        } else {
             features = this.standardize(features)
         }
         features = tf.ones([features.shape[0], 1]).concat(features, 1)
@@ -82,8 +118,8 @@ class LinearRegression {
         return features.sub(this.mean).div(this.variance.pow(0.5))
     }
 
-    recordMSE () {
-       const mse =  this.features
+    recordMSE() {
+        const mse = this.features
             .matMul(this.weights)
             .sub(this.labels)
             .pow(2)
@@ -93,13 +129,13 @@ class LinearRegression {
         this.mseHistory.unshift(mse)
     }
 
-    updateLearningRate () {
-        if(this.mseHistory.length < 2){
+    updateLearningRate() {
+        if (this.mseHistory.length < 2) {
             return
         }
-        if(this.mseHistory[0] > this.mseHistory[1]){
+        if (this.mseHistory[0] > this.mseHistory[1]) {
             this.options.learningRate /= 2
-        }else{
+        } else {
             this.options.learningRate *= 1.05
         }
     }
